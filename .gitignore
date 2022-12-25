@@ -1,0 +1,11 @@
+# IDE
+.idea
+.vscode
+
+# PHP/Composer
+vendor
+.composer
+
+# Docker
+.bash_history
+docker/dbdata

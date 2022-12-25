@@ -1,0 +1,24 @@
+version: "3.7"
+
+services:
+  modphp:
+    build: docker/modphp
+    container_name: modphp
+    restart: always
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./docker/modphp/vhost.conf:/etc/apache2/sites-enabled/vhost.conf
+      - ./docker/modphp/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+    environment:
+      - TZ=America/Sao_Paulo
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
+    driver: bridge
