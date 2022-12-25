@@ -59,3 +59,26 @@ class UserController
 }
 
 ```
+
+### Exemplo de middleware
+
+```php
+<?php
+use \WillRy\MicroRouter\Middleware\MiddlewareInterface;
+
+class TestMiddleware implements MiddlewareInterface
+{
+
+    // método que executa o middleware
+    public function handle(array $data = [])
+    {
+        $rand = rand(0, 10) % 2 === 0;
+        if (!$rand) {
+            echo 'Random Error';
+            die;
+        }
+
+    }
+}
+
+```
