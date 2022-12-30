@@ -13,11 +13,14 @@ Uma biblioteca de rotas simples, que permite a declaração de rotas definindo:
 ```php
 <?php
 
+use WillRy\MicroRouter\AppSingleton;
+
 require __DIR__ . '/../vendor/autoload.php';
 
-$app = new WillRy\MicroRouter\App();
+$app = AppSingleton::getInstance();
 
 $app->setNotFound(\WillRy\MicroRouter\Controller\UserController::class, 'notFound');
+$app->setMethodNotAllowed(\WillRy\MicroRouter\Controller\UserController::class, 'methodNotAllowed');
 
 $app->get('/', \WillRy\MicroRouter\Controller\UserController::class, 'index');
 
@@ -28,9 +31,10 @@ $app->middleware([
     $app->get('/show/{id}', \WillRy\MicroRouter\Controller\UserController::class, 'show');
 });
 
-$app->get('/test', \WillRy\MicroRouter\Controller\UserController::class, 'test');
+$app->post('/create', \WillRy\MicroRouter\Controller\UserController::class, 'create');
 
 $app->run();
+
 
 ```
 
@@ -39,6 +43,7 @@ $app->run();
 ```php
 <?php
 
+use WillRy\MicroRouter\AppSingleton;
 
 class UserController
 {
@@ -49,12 +54,27 @@ class UserController
 
     public function show(array $data)
     {
-        var_dump($data);
+        var_dump([
+            'currentRoute' => AppSingleton::getInstance()->getCurrentRoute(),
+            'currentRouteParams' => AppSingleton::getInstance()->getRouteParams(),
+            'controllerParams' => $data
+        ]);
+    }
+
+    public function create()
+    {
+        $post = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        var_dump($post);
     }
 
     public function notFound()
     {
-        echo 'Página não encontrada';
+        echo 'Pagina não encontrada';
+    }
+
+    public function methodNotAllowed()
+    {
+        echo 'Rota com método não permitido';
     }
 }
 
