@@ -27,7 +27,7 @@ class RouterCollection
      * @param $function
      * @param array $addingMiddlewaresList
      */
-    public static function add(string $method, string $path, $className, $function, array $addingMiddlewaresList = [])
+    public static function add(string $method, string $path, $className, $function, array $addingMiddlewaresList = [], $name = null)
     {
         self::initCollection($method);
 
@@ -36,7 +36,8 @@ class RouterCollection
             'className' => $className,
             'function' => $function,
             'middlewares' => $addingMiddlewaresList,
-            'method' => $method
+            'method' => $method,
+            'name' => $name
         ];
     }
 
@@ -45,7 +46,7 @@ class RouterCollection
      * @param $method
      * @return mixed
      */
-    public static function filter($method)
+    public static function filterByMethod($method)
     {
         self::initCollection($method);
 
@@ -60,5 +61,28 @@ class RouterCollection
     public static function all()
     {
         return self::$collection;
+    }
+
+    public static function allRoutes()
+    {
+        $allMethods = (array)self::$collection;
+
+        $allRoutes = [];
+        foreach ($allMethods as $routes) {
+            $allRoutes = array_merge($allRoutes, $routes);
+        }
+
+        return $allRoutes;
+    }
+
+    public static function getRouteByName(string $name)
+    {
+        $allRoutes = self::allRoutes();
+
+        $route = array_values(array_filter($allRoutes, function ($route) use ($name) {
+            return $route['name'] === $name;
+        }));
+
+        return $route[0] ?? null;
     }
 }

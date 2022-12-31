@@ -11,6 +11,13 @@ class UserController
         echo 'index';
     }
 
+    public function createUrl()
+    {
+        $url = AppSingleton::getInstance()->getRouter()->route('show.user', ['id' => 1]);
+
+        echo $url;
+    }
+
     public function show(array $data)
     {
         var_dump([

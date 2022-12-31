@@ -6,7 +6,7 @@ use WillRy\MicroRouter\Router\Router;
 
 class App
 {
-    public Router $router;
+    protected Router $router;
 
     public function __construct()
     {
@@ -18,10 +18,11 @@ class App
      * @param string $path
      * @param $className
      * @param $function
+     * @param null $name
      */
-    public function get(string $path, $className, $function)
+    public function get(string $path, $className, $function, $name = null)
     {
-        $this->router->get($path, $className, $function);
+        $this->router->get($path, $className, $function, $name);
     }
 
     /**
@@ -29,10 +30,11 @@ class App
      * @param string $path
      * @param $className
      * @param $function
+     * @param null $name
      */
-    public function post(string $path, $className, $function)
+    public function post(string $path, $className, $function, $name = null)
     {
-        $this->router->post($path, $className, $function);
+        $this->router->post($path, $className, $function, $name);
     }
 
     /**
@@ -40,10 +42,11 @@ class App
      * @param string $path
      * @param $className
      * @param $function
+     * @param null $name
      */
-    public function put(string $path, $className, $function)
+    public function put(string $path, $className, $function, $name = null)
     {
-        $this->router->put($path, $className, $function);
+        $this->router->put($path, $className, $function, $name);
     }
 
     /**
@@ -51,10 +54,11 @@ class App
      * @param string $path
      * @param $className
      * @param $function
+     * @param null $name
      */
-    public function delete(string $path, $className, $function)
+    public function delete(string $path, $className, $function, $name = null)
     {
-        $this->router->delete($path, $className, $function);
+        $this->router->delete($path, $className, $function, $name);
     }
 
     /**
@@ -96,6 +100,11 @@ class App
         }
 
         $this->router->setMethodNotAllowed($className, $function);
+    }
+
+    public function getRouter()
+    {
+        return $this->router;
     }
 
     public function getCurrentRoute()

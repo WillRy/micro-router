@@ -4,6 +4,8 @@ namespace WillRy\MicroRouter\Router;
 
 use WillRy\MicroRouter\Exception\MethodNotAllowedException;
 use WillRy\MicroRouter\Exception\NotFoundException;
+use WillRy\MicroRouter\Exception\RequiredRouteParamException;
+use WillRy\MicroRouter\Exception\RouteNameNotFoundException;
 use WillRy\MicroRouter\Middleware\MiddlewareInterface;
 
 class Router
@@ -32,34 +34,35 @@ class Router
         return $this->activeRoute;
     }
 
-    public function get(string $path, string $className, string $function)
+    public function get(string $path, string $className, string $function, $name = null)
     {
-        $this->request('GET', $path, $className, $function);
+        $this->request('GET', $path, $className, $function, $name);
     }
 
-    public function post(string $path, string $className, string $function)
+    public function post(string $path, string $className, string $function, $name = null)
     {
-        $this->request('POST', $path, $className, $function);
+        $this->request('POST', $path, $className, $function, $name);
     }
 
-    public function put(string $path, string $className, string $function)
+    public function put(string $path, string $className, string $function, $name = null)
     {
-        $this->request('PUT', $path, $className, $function);
+        $this->request('PUT', $path, $className, $function, $name);
     }
 
-    public function delete(string $path, string $className, string $function)
+    public function delete(string $path, string $className, string $function, $name = null)
     {
-        $this->request('DELETE', $path, $className, $function);
+        $this->request('DELETE', $path, $className, $function, $name);
     }
 
-    public function request(string $method, string $path, string $className, string $function)
+    public function request(string $method, string $path, string $className, string $function, $name = null)
     {
         RouterCollection::add(
             $method,
             $path,
             $className,
             $function,
-            $this->addingMiddlewaresList
+            $this->addingMiddlewaresList,
+            $name
         );
     }
 
@@ -127,15 +130,9 @@ class Router
     }
 
 
-
     public function identifyRoute()
     {
-        $allMethods = (array) RouterCollection::all();
-
-        $allRoutes = [];
-        foreach ($allMethods as $routes) {
-            $allRoutes = array_merge($allRoutes, $routes);
-        }
+        $allRoutes = RouterCollection::allRoutes();
 
         $matchRoutes = [];
         foreach ($allRoutes as $value) {
@@ -155,6 +152,10 @@ class Router
         return $matchRoutes;
     }
 
+    /**
+     * @throws NotFoundException
+     * @throws MethodNotAllowedException
+     */
     public function dispatch()
     {
 
@@ -227,6 +228,36 @@ class Router
     public function getParams()
     {
         return $this->activeRoute['params'] ?? [];
+    }
+
+    /**
+     * @param $name
+     * @param array $params
+     * @return array|mixed|string|string[]
+     * @throws RequiredRouteParamException
+     * @throws RouteNameNotFoundException
+     */
+    public function route($name, array $params = [])
+    {
+        $route = RouterCollection::getRouteByName($name);
+
+        if (empty($route)) throw new RouteNameNotFoundException("Route name not found!");
+
+        $routeStr = $route['path'];
+
+        preg_match_all('/{([a-zA-Z]+)}/', $routeStr, $matches);
+
+        $diff = array_diff(array_values($matches[1]), array_keys($params));
+
+        if (!empty($matches[1]) && $diff) {
+            throw new RequiredRouteParamException("Parameters required: " . implode($diff));
+        }
+
+        foreach ($params as $key => $param) {
+            $routeStr = str_replace("{" . $key . "}", $param, $routeStr);
+        }
+
+        return $routeStr;
     }
 
     private function checkUrl(string $toFind, $subject)
