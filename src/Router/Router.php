@@ -250,7 +250,7 @@ class Router
         $diff = array_diff(array_values($matches[1]), array_keys($params));
 
         if (!empty($matches[1]) && $diff) {
-            throw new RequiredRouteParamException("Parameters required: " . implode($diff));
+            throw new RequiredRouteParamException("Parameters required: " . implode(',', $diff));
         }
 
         foreach ($params as $key => $param) {
