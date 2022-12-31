@@ -20,7 +20,7 @@ class App
      * @param $function
      * @param null $name
      */
-    public function get(string $path, $className, $function, $name = null)
+    public function get(string $path, $className, $function, $name = null): void
     {
         $this->router->get($path, $className, $function, $name);
     }
@@ -32,7 +32,7 @@ class App
      * @param $function
      * @param null $name
      */
-    public function post(string $path, $className, $function, $name = null)
+    public function post(string $path, $className, $function, $name = null): void
     {
         $this->router->post($path, $className, $function, $name);
     }
@@ -44,7 +44,7 @@ class App
      * @param $function
      * @param null $name
      */
-    public function put(string $path, $className, $function, $name = null)
+    public function put(string $path, $className, $function, $name = null): void
     {
         $this->router->put($path, $className, $function, $name);
     }
@@ -56,7 +56,7 @@ class App
      * @param $function
      * @param null $name
      */
-    public function delete(string $path, $className, $function, $name = null)
+    public function delete(string $path, $className, $function, $name = null): void
     {
         $this->router->delete($path, $className, $function, $name);
     }
@@ -65,7 +65,7 @@ class App
      * Cria um grupo de rotas contendo um conjunto de middleware
      * @throws \Exception
      */
-    public function middleware(array $middlewareList, $callback)
+    public function middleware(array $middlewareList, $callback): void
     {
         $this->router->setAddingMiddlewareList($middlewareList);
         $callback($this);
@@ -78,7 +78,7 @@ class App
      * @param string $function
      * @throws \Exception
      */
-    public function setNotFound(string $className, string $function)
+    public function setNotFound(string $className, string $function): void
     {
         if (!class_exists($className) || !method_exists($className, $function)) {
             throw new \Exception("Class or method doesn't exists!");
@@ -93,7 +93,7 @@ class App
      * @param string $function
      * @throws \Exception
      */
-    public function setMethodNotAllowed(string $className, string $function)
+    public function setMethodNotAllowed(string $className, string $function): void
     {
         if (!class_exists($className) || !method_exists($className, $function)) {
             throw new \Exception("Class or method doesn't exists!");
@@ -102,17 +102,17 @@ class App
         $this->router->setMethodNotAllowed($className, $function);
     }
 
-    public function getRouter()
+    public function getRouter(): Router
     {
         return $this->router;
     }
 
-    public function getCurrentRoute()
+    public function getActiveRoute(): ?array
     {
         return $this->router->getActiveRoute();
     }
 
-    public function getRouteParams()
+    public function getRouteParams(): array
     {
         return $this->router->getParams();
     }

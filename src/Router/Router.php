@@ -29,32 +29,32 @@ class Router
         $this->method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     }
 
-    public function getActiveRoute()
+    public function getActiveRoute(): ?array
     {
         return $this->activeRoute;
     }
 
-    public function get(string $path, string $className, string $function, $name = null)
+    public function get(string $path, string $className, string $function, $name = null): void
     {
         $this->request('GET', $path, $className, $function, $name);
     }
 
-    public function post(string $path, string $className, string $function, $name = null)
+    public function post(string $path, string $className, string $function, $name = null): void
     {
         $this->request('POST', $path, $className, $function, $name);
     }
 
-    public function put(string $path, string $className, string $function, $name = null)
+    public function put(string $path, string $className, string $function, $name = null): void
     {
         $this->request('PUT', $path, $className, $function, $name);
     }
 
-    public function delete(string $path, string $className, string $function, $name = null)
+    public function delete(string $path, string $className, string $function, $name = null): void
     {
         $this->request('DELETE', $path, $className, $function, $name);
     }
 
-    public function request(string $method, string $path, string $className, string $function, $name = null)
+    public function request(string $method, string $path, string $className, string $function, $name = null): void
     {
         RouterCollection::add(
             $method,
@@ -66,7 +66,7 @@ class Router
         );
     }
 
-    public function setNotFound(string $className, string $function)
+    public function setNotFound(string $className, string $function): void
     {
         if (!class_exists($className) || !method_exists($className, $function)) {
             throw new \Exception("Class or method doesn't exists!");
@@ -76,7 +76,7 @@ class Router
         $this->notFoundFunctionName = $function;
     }
 
-    public function setMethodNotAllowed(string $className, string $function)
+    public function setMethodNotAllowed(string $className, string $function): void
     {
         if (!class_exists($className) || !method_exists($className, $function)) {
             throw new \Exception("Class or method doesn't exists!");
@@ -86,7 +86,7 @@ class Router
         $this->methodNotAllowedFunctionName = $function;
     }
 
-    public function notFound()
+    public function notFound(): void
     {
         http_response_code(404);
 
@@ -102,7 +102,7 @@ class Router
         throw new NotFoundException("404", 1);
     }
 
-    public function methodNotAllowed()
+    public function methodNotAllowed(): void
     {
         http_response_code(405);
 
@@ -118,7 +118,7 @@ class Router
         throw new MethodNotAllowedException("405", 1);
     }
 
-    public function setAddingMiddlewareList(array $middlewares)
+    public function setAddingMiddlewareList(array $middlewares): void
     {
         foreach ($middlewares as $middleware) {
             if (!$middleware instanceof MiddlewareInterface) {
@@ -130,7 +130,7 @@ class Router
     }
 
 
-    public function identifyRoute()
+    public function identifyRoute(): ?array
     {
         $allRoutes = RouterCollection::allRoutes();
 
@@ -156,7 +156,7 @@ class Router
      * @throws NotFoundException
      * @throws MethodNotAllowedException
      */
-    public function dispatch()
+    public function dispatch(): void
     {
 
         $this->activeRoute = [];
@@ -225,7 +225,7 @@ class Router
         die;
     }
 
-    public function getParams()
+    public function getParams(): array
     {
         return $this->activeRoute['params'] ?? [];
     }
@@ -233,11 +233,11 @@ class Router
     /**
      * @param $name
      * @param array $params
-     * @return array|mixed|string|string[]
+     * @return string
      * @throws RequiredRouteParamException
      * @throws RouteNameNotFoundException
      */
-    public function route($name, array $params = [])
+    public function route($name, array $params = []): string
     {
         $route = RouterCollection::getRouteByName($name);
 
@@ -260,7 +260,7 @@ class Router
         return $routeStr;
     }
 
-    private function checkUrl(string $toFind, $subject)
+    private function checkUrl(string $toFind, $subject): array
     {
         preg_match_all('/\{([^\}]*)\}/', $toFind, $variables);
 

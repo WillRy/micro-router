@@ -21,7 +21,7 @@ class UserController
     public function show(array $data)
     {
         var_dump([
-            'currentRoute' => AppSingleton::getInstance()->getCurrentRoute(),
+            'currentRoute' => AppSingleton::getInstance()->getActiveRoute(),
             'currentRouteParams' => AppSingleton::getInstance()->getRouteParams(),
             'controllerParams' => $data
         ]);

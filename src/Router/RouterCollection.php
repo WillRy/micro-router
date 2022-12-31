@@ -10,7 +10,7 @@ class RouterCollection
      * Inicializa a collection de rotas caso não exista
      * @param $method
      */
-    public static function initCollection($method)
+    public static function initCollection($method): void
     {
         if (empty(self::$collection)) {
             self::$collection = new \stdClass();
@@ -26,8 +26,9 @@ class RouterCollection
      * @param $className
      * @param $function
      * @param array $addingMiddlewaresList
+     * @param null $name
      */
-    public static function add(string $method, string $path, $className, $function, array $addingMiddlewaresList = [], $name = null)
+    public static function add(string $method, string $path, $className, $function, array $addingMiddlewaresList = [], $name = null): void
     {
         self::initCollection($method);
 
@@ -44,9 +45,9 @@ class RouterCollection
     /**
      * Retorna um grupo de rotas com base no verbo HTTP
      * @param $method
-     * @return mixed
+     * @return array
      */
-    public static function filterByMethod($method)
+    public static function filterByMethod($method): array
     {
         self::initCollection($method);
 
@@ -58,12 +59,12 @@ class RouterCollection
      *
      * @return \stdClass
      */
-    public static function all()
+    public static function all(): object
     {
         return self::$collection;
     }
 
-    public static function allRoutes()
+    public static function allRoutes(): array
     {
         $allMethods = (array)self::$collection;
 
@@ -75,7 +76,7 @@ class RouterCollection
         return $allRoutes;
     }
 
-    public static function getRouteByName(string $name)
+    public static function getRouteByName(string $name): ?array
     {
         $allRoutes = self::allRoutes();
 
