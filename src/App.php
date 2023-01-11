@@ -2,6 +2,8 @@
 
 namespace WillRy\MicroRouter;
 
+use WillRy\MicroRouter\Router\ActiveRoute;
+use WillRy\MicroRouter\Router\Route;
 use WillRy\MicroRouter\Router\Router;
 
 class App
@@ -18,11 +20,11 @@ class App
      * @param string $path
      * @param $className
      * @param $function
-     * @param null $name
+     * @return Route
      */
-    public function get(string $path, $className, $function, $name = null): void
+    public function get(string $path, $className, $function): Route
     {
-        $this->router->get($path, $className, $function, $name);
+        return $this->router->get($path, $className, $function);
     }
 
     /**
@@ -30,11 +32,11 @@ class App
      * @param string $path
      * @param $className
      * @param $function
-     * @param null $name
+     * @return Route
      */
-    public function post(string $path, $className, $function, $name = null): void
+    public function post(string $path, $className, $function): Route
     {
-        $this->router->post($path, $className, $function, $name);
+        return $this->router->post($path, $className, $function);
     }
 
     /**
@@ -42,11 +44,11 @@ class App
      * @param string $path
      * @param $className
      * @param $function
-     * @param null $name
+     * @return Route
      */
-    public function put(string $path, $className, $function, $name = null): void
+    public function put(string $path, $className, $function): Route
     {
-        $this->router->put($path, $className, $function, $name);
+        return $this->router->put($path, $className, $function);
     }
 
     /**
@@ -54,16 +56,15 @@ class App
      * @param string $path
      * @param $className
      * @param $function
-     * @param null $name
+     * @return Route
      */
-    public function delete(string $path, $className, $function, $name = null): void
+    public function delete(string $path, $className, $function): Route
     {
-        $this->router->delete($path, $className, $function, $name);
+        return $this->router->delete($path, $className, $function);
     }
 
     /**
      * Cria um grupo de rotas contendo um conjunto de middleware
-     * @throws \Exception
      */
     public function middleware(array $middlewareList, $callback): void
     {
@@ -76,14 +77,9 @@ class App
      * Configura a rota de 404
      * @param string $className
      * @param string $function
-     * @throws \Exception
      */
     public function setNotFound(string $className, string $function): void
     {
-        if (!class_exists($className) || !method_exists($className, $function)) {
-            throw new \Exception("Class or method doesn't exists!");
-        }
-
         $this->router->setNotFound($className, $function);
     }
 
@@ -91,14 +87,9 @@ class App
      * Configura a rota de 405
      * @param string $className
      * @param string $function
-     * @throws \Exception
      */
     public function setMethodNotAllowed(string $className, string $function): void
     {
-        if (!class_exists($className) || !method_exists($className, $function)) {
-            throw new \Exception("Class or method doesn't exists!");
-        }
-
         $this->router->setMethodNotAllowed($className, $function);
     }
 
@@ -107,7 +98,7 @@ class App
         return $this->router;
     }
 
-    public function getActiveRoute(): ?array
+    public function getActiveRoute(): ActiveRoute
     {
         return $this->router->getActiveRoute();
     }

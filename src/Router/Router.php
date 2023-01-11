@@ -21,7 +21,7 @@ class Router
 
     private array $addingMiddlewaresList = [];
 
-    private array $activeRoute;
+    private ActiveRoute|null $activeRoute;
 
     public function __construct()
     {
@@ -29,59 +29,47 @@ class Router
         $this->method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     }
 
-    public function getActiveRoute(): ?array
+    public function getActiveRoute(): ActiveRoute
     {
         return $this->activeRoute;
     }
 
-    public function get(string $path, string $className, string $function, $name = null): void
+    public function get(string $path, string $className, string $function): Route
     {
-        $this->request('GET', $path, $className, $function, $name);
+        return $this->request('GET', $path, $className, $function);
     }
 
-    public function post(string $path, string $className, string $function, $name = null): void
+    public function post(string $path, string $className, string $function): Route
     {
-        $this->request('POST', $path, $className, $function, $name);
+        return $this->request('POST', $path, $className, $function);
     }
 
-    public function put(string $path, string $className, string $function, $name = null): void
+    public function put(string $path, string $className, string $function): Route
     {
-        $this->request('PUT', $path, $className, $function, $name);
+        return $this->request('PUT', $path, $className, $function);
     }
 
-    public function delete(string $path, string $className, string $function, $name = null): void
+    public function delete(string $path, string $className, string $function): Route
     {
-        $this->request('DELETE', $path, $className, $function, $name);
+        return $this->request('DELETE', $path, $className, $function);
     }
 
-    public function request(string $method, string $path, string $className, string $function, $name = null): void
+    public function request(string $method, string $path, string $className, string $function): Route
     {
-        RouterCollection::add(
-            $method,
-            $path,
-            $className,
-            $function,
-            $this->addingMiddlewaresList,
-            $name
-        );
+        $route = new Route();
+        $route = $route->create($method, $path, $className, $function, $this->addingMiddlewaresList);
+        RouterCollection::add($route);
+        return $route;
     }
 
     public function setNotFound(string $className, string $function): void
     {
-        if (!class_exists($className) || !method_exists($className, $function)) {
-            throw new \Exception("Class or method doesn't exists!");
-        }
-
         $this->notFoundClassName = $className;
         $this->notFoundFunctionName = $function;
     }
 
     public function setMethodNotAllowed(string $className, string $function): void
     {
-        if (!class_exists($className) || !method_exists($className, $function)) {
-            throw new \Exception("Class or method doesn't exists!");
-        }
-
         $this->methodNotAllowedClassName = $className;
         $this->methodNotAllowedFunctionName = $function;
     }
@@ -93,9 +81,13 @@ class Router
         $function = $this->notFoundFunctionName;
         $class = $this->notFoundClassName;
 
-        if (class_exists($class) && method_exists($class, $function)) {
-            (new $class())->$function();
-            die;
+        if (!empty($function) && !empty($class)) {
+            if (class_exists($class) && method_exists($class, $function)) {
+                (new $class())->$function();
+                die;
+            }
+
+            throw new \Exception("Class [{$class}] or method [$function] doesn't exists!");
         }
 
 
@@ -109,9 +101,13 @@ class Router
         $function = $this->methodNotAllowedFunctionName;
         $class = $this->methodNotAllowedClassName;
 
-        if (class_exists($class) && method_exists($class, $function)) {
-            (new $class())->$function();
-            die;
+        if (!empty($function) && !empty($class)) {
+            if (class_exists($class) && method_exists($class, $function)) {
+                (new $class())->$function();
+                die;
+            }
+
+            throw new \Exception("Class [{$class}] or method [$function] doesn't exists!");
         }
 
 
@@ -121,12 +117,13 @@ class Router
     public function setAddingMiddlewareList(array $middlewares): void
     {
         foreach ($middlewares as $middleware) {
-            if (!$middleware instanceof MiddlewareInterface) {
-                throw new \Exception("Middlewares should implement MiddlewareInterface");
-            }
+            $this->pushMiddlewares($middleware);
         }
+    }
 
-        $this->addingMiddlewaresList = $middlewares;
+    public function pushMiddlewares(MiddlewareInterface $middleware)
+    {
+        $this->addingMiddlewaresList[] = $middleware;
     }
 
 
@@ -135,14 +132,14 @@ class Router
         $allRoutes = RouterCollection::allRoutes();
 
         $matchRoutes = [];
+
+        /** @var Route $value */
         foreach ($allRoutes as $value) {
-            $result = $this->checkUrl($value['path'], $this->path);
+            $result = $this->checkUrl($value->getPath(), $this->path);
 
             if (!$result['result']) continue;
 
-            $value['params'] = $result['params'];
-
-            $matchRoutes[] = $value;
+            $matchRoutes[] = new ActiveRoute($value, $result['params']);
         }
 
         if (empty($matchRoutes)) {
@@ -159,7 +156,7 @@ class Router
     public function dispatch(): void
     {
 
-        $this->activeRoute = [];
+        $this->activeRoute = null;
 
         $routes = $this->identifyRoute();
 
@@ -170,16 +167,18 @@ class Router
         /**
          * Filter if exists matched routes with CURRENT HTTP METHOD
          */
-        $routesWithCorrectMethod = array_filter($routes, function ($route) {
-            return $route['method'] === $this->method;
+        $routesWithCorrectMethod = array_filter($routes, function (ActiveRoute $route) {
+            return $route->getRoute()->getMethod() === $this->method;
         });
+
+        /** @var ActiveRoute $routeWithCorrectMethod */
         $routeWithCorrectMethod = reset($routesWithCorrectMethod) ?? null;
 
         /**
          * Filter if exists matched routes with ANOTHER HTTP METHOD
          */
-        $routeWithOtherMethod = array_filter($routes, function ($route) {
-            return $route['method'] !== $this->method;
+        $routeWithOtherMethod = array_filter($routes, function (ActiveRoute $route) {
+            return $route->getRoute()->getMethod() !== $this->method;
         });
 
 
@@ -199,12 +198,12 @@ class Router
         }
 
         $route = [
-            'path' => $routeWithCorrectMethod['path'] ?? null,
-            'params' => $routeWithCorrectMethod['params'] ?? [],
-            'className' => $routeWithCorrectMethod['className'] ?? null,
-            'function' => $routeWithCorrectMethod['function'] ?? null,
-            'middlewares' => $routeWithCorrectMethod['middlewares'] ?? [],
-            'method' => $routeWithCorrectMethod['method']
+            'path' => $routeWithCorrectMethod->getRoute()->getPath() ?? null,
+            'params' => $routeWithCorrectMethod->getParams() ?? [],
+            'className' => $routeWithCorrectMethod->getRoute()->getClassName() ?? null,
+            'function' => $routeWithCorrectMethod->getRoute()->getFunction() ?? null,
+            'middlewares' => $routeWithCorrectMethod->getRoute()->getMiddlewares() ?? [],
+            'method' => $routeWithCorrectMethod->getRoute()->getMethod()
         ];
 
         $className = $route['className'];
@@ -213,7 +212,7 @@ class Router
         $middlewares = $route['middlewares'];
 
 
-        $this->activeRoute = $route;
+        $this->activeRoute = $routeWithCorrectMethod;
 
         /** @var MiddlewareInterface $middleware */
         foreach ($middlewares as $middleware) {
@@ -227,7 +226,7 @@ class Router
 
     public function getParams(): array
     {
-        return $this->activeRoute['params'] ?? [];
+        return $this->activeRoute->getParams();
     }
 
     /**
@@ -243,7 +242,7 @@ class Router
 
         if (empty($route)) throw new RouteNameNotFoundException("Route name not found!");
 
-        $routeStr = $route['path'];
+        $routeStr = $route->getPath();
 
         preg_match_all('/{([a-zA-Z]+)}/', $routeStr, $matches);
 

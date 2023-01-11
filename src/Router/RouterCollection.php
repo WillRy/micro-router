@@ -21,25 +21,16 @@ class RouterCollection
     /**
      * Adiciona uma rota na collection
      *
-     * @param string $method
-     * @param string $path
-     * @param $className
-     * @param $function
-     * @param array $addingMiddlewaresList
-     * @param null $name
+     * @param Route $route
+     * @return Route
      */
-    public static function add(string $method, string $path, $className, $function, array $addingMiddlewaresList = [], $name = null): void
+    public static function add(Route $route): Route
     {
-        self::initCollection($method);
+        self::initCollection($route->getMethod());
 
-        self::$collection->{$method}[] = [
-            'path' => $path,
-            'className' => $className,
-            'function' => $function,
-            'middlewares' => $addingMiddlewaresList,
-            'method' => $method,
-            'name' => $name
-        ];
+        self::$collection->{$route->getMethod()}[] = $route;
+
+        return $route;
     }
 
     /**
@@ -76,12 +67,12 @@ class RouterCollection
         return $allRoutes;
     }
 
-    public static function getRouteByName(string $name): ?array
+    public static function getRouteByName(string $name): Route|null
     {
         $allRoutes = self::allRoutes();
 
-        $route = array_values(array_filter($allRoutes, function ($route) use ($name) {
-            return $route['name'] === $name;
+        $route = array_values(array_filter($allRoutes, function (Route $route) use ($name) {
+            return $route->getName() === $name;
         }));
 
         return $route[0] ?? null;

@@ -8,7 +8,7 @@ class AppSingleton
     /**
      * @var App
      */
-    private static $instance;
+    private static App $instance;
 
     /**
      * Connect constructor. Private singleton
