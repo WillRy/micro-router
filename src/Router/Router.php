@@ -6,7 +6,7 @@ use WillRy\MicroRouter\Exception\MethodNotAllowedException;
 use WillRy\MicroRouter\Exception\NotFoundException;
 use WillRy\MicroRouter\Exception\RequiredRouteParamException;
 use WillRy\MicroRouter\Exception\RouteNameNotFoundException;
-use WillRy\MicroRouter\Middleware\MiddlewareInterface;
+use WillRy\MicroRouter\Router\MiddlewareInterface;
 
 class Router
 {

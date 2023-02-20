@@ -36,4 +36,9 @@ class AppSingleton
 
         return self::$instance;
     }
+
+    public function __invoke(): ?App
+    {
+        return self::getInstance();
+    }
 }

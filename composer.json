@@ -1,6 +1,6 @@
 {
     "name": "willry/micro-router",
-    "description": "A simple router library, supporting usage of controllers and middlewares",
+    "description": "A simple router library with controllers and middlewares",
     "authors": [
         {
             "name": "William",

@@ -24,5 +24,24 @@ $app->middleware([
 
 $app->post('/create', UserController::class, 'create')->name('create');
 
+$app->get('/redirect', UserController::class, 'redirect')->name('redirect');
+
+/**
+ * Para customizar os tipos de exceptions
+ *
+ * Basta registrar o tipo da exception e o callback que executa para trata-la
+ * - \Exception
+ * - AuthenticationException::class
+ *
+ *  nesse exemplo eu customizo o status code e saída das exceptions comuns
+ *  relançando elas com o novo status code
+ */
+$app->handler(\Exception::class, function (\Exception $e) {
+    http_response_code(500);
+    var_dump('ooops');
+
+    //relança a exception (opcional)
+    throw $e;
+});
 
 $app->run();

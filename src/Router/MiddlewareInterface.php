@@ -1,6 +1,6 @@
 <?php
 
-namespace WillRy\MicroRouter\Middleware;
+namespace WillRy\MicroRouter\Router;
 
 interface MiddlewareInterface
 {

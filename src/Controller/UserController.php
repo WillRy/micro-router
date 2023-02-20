@@ -2,6 +2,7 @@
 
 namespace WillRy\MicroRouter\Controller;
 
+use WillRy\MicroRouter\App;
 use WillRy\MicroRouter\AppSingleton;
 
 class UserController
@@ -41,5 +42,10 @@ class UserController
     public function methodNotAllowed()
     {
         echo 'Rota com método não permitido';
+    }
+
+    public function redirect()
+    {
+        AppSingleton::getInstance()->redirect('show.user', ['id' => 1]);
     }
 }

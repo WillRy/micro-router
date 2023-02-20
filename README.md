@@ -37,6 +37,23 @@ $app->middleware([
 
 $app->post('/create', UserController::class, 'create')->name('create');
 
+$app->get('/redirect', UserController::class, 'redirect')->name('redirect');
+
+/**
+ * Customize exception type handler
+ *
+ * Use for customize each exception type, like:
+ * - \Exception
+ * - AuthenticationException::class
+ *
+ *
+ */
+$app->handler(\Exception::class, function (\Exception $e) {
+    http_response_code(500);
+    var_dump('ooops');
+
+    throw $e;
+});
 
 $app->run();
 
@@ -105,4 +122,38 @@ class TestMiddleware implements MiddlewareInterface
     }
 }
 
+```
+
+### Customização de erros
+
+É possível customizar qualquer saída de exception
+
+```php
+
+/**
+ * Para customizar os tipos de exceptions
+ *
+ * Basta registrar o tipo da exception e o callback que executa para trata-la
+ * - \Exception
+ * - AuthenticationException::class
+ *
+ *
+ */
+ 
+ 
+//nesse exemplo eu customizo o status code e saída das exceptions comuns
+//relançando elas com o novo status code
+$app->handler(\Exception::class, function (\Exception $e) {
+    http_response_code(500);
+    var_dump('ooops');
+
+    //relança a exception (opcional)
+    throw $e;
+});
+
+//Nesse exemplo eu customizei o status code e saída
+$app->handler(AuthenticationException::class, function (\Exception $e) {
+    http_response_code(401);
+    var_dump('Auth Failed');
+});
 ```

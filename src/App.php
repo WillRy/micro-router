@@ -9,10 +9,12 @@ use WillRy\MicroRouter\Router\Router;
 class App
 {
     protected Router $router;
+    protected Handler\Handler $handler;
 
     public function __construct()
     {
         $this->router = new Router();
+        $this->handler = new Handler\Handler();
     }
 
     /**
@@ -108,11 +110,28 @@ class App
         return $this->router->getParams();
     }
 
+    public function redirect(string $routeName, array $params = [], bool $permanent = true)
+    {
+        $url = $this->router->route($routeName, $params);
+        header("Location: {$url}", true, $permanent ? 301 : 302);
+        die;
+    }
+
+    public function handler(string $class, callable $callback)
+    {
+        $this->handler->handle($class, $callback);
+    }
+
     /**
      * Executa a aplicação
      */
     public function run()
     {
-        $this->router->dispatch();
+        try {
+            $this->router->dispatch();
+        } catch (\Exception $e) {
+            $class = get_class($e);
+            $this->handler->render($class, $e);
+        }
     }
 }
