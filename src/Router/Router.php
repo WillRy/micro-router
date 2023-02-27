@@ -127,26 +127,35 @@ class Router
     }
 
 
-    public function identifyRoute(): ?array
+    public function identifyRouteByCurrentHttpMethod(): ?ActiveRoute
     {
-        $allRoutes = RouterCollection::allRoutes();
+        $allRoutes = RouterCollection::filterByMethod($this->method);
 
-        $matchRoutes = [];
+        $result = $this->matches($allRoutes);
 
-        /** @var Route $value */
-        foreach ($allRoutes as $value) {
-            $result = $this->checkUrl($value->getPath(), $this->path);
-
-            if (!$result['result']) continue;
-
-            $matchRoutes[] = new ActiveRoute($value, $result['params']);
-        }
-
-        if (empty($matchRoutes)) {
+        if (empty($result)) {
             return null;
         }
 
-        return $matchRoutes;
+        return new ActiveRoute($result[0], $result[1]);
+    }
+
+    public function identifyRouteinDifferentHttpMethod(): ?ActiveRoute
+    {
+        $allRoutes = RouterCollection::allRoutes();
+
+        $routes = array_values(array_filter($allRoutes, function (Route $route) {
+            return $route->getMethod() !== $this->method;
+        }));
+
+
+        $result = $this->matches($routes);
+
+        if (empty($result)) {
+            return null;
+        }
+
+        return new ActiveRoute($result[0], $result[1]);
     }
 
     /**
@@ -158,42 +167,25 @@ class Router
 
         $this->activeRoute = null;
 
-        $routes = $this->identifyRoute();
+        $routeWithCorrectMethod = $this->identifyRouteByCurrentHttpMethod();
 
-        if (empty($routes)) {
+        /**
+         * if not exists, necessary check if should be status 404 or 405
+         */
+        if (empty($routeWithCorrectMethod)) {
+            $routeWithOtherMethod = $this->identifyRouteinDifferentHttpMethod();
+
+            if (!empty($routeWithOtherMethod)) {
+                $this->methodNotAllowed();
+            }
+
             $this->notFound();
         }
 
         /**
-         * Filter if exists matched routes with CURRENT HTTP METHOD
-         */
-        $routesWithCorrectMethod = array_filter($routes, function (ActiveRoute $route) {
-            return $route->getRoute()->getMethod() === $this->method;
-        });
-
-        /** @var ActiveRoute $routeWithCorrectMethod */
-        $routeWithCorrectMethod = reset($routesWithCorrectMethod) ?? null;
-
-        /**
-         * Filter if exists matched routes with ANOTHER HTTP METHOD
-         */
-        $routeWithOtherMethod = array_filter($routes, function (ActiveRoute $route) {
-            return $route->getRoute()->getMethod() !== $this->method;
-        });
-
-
-        /**
-         * Check if route is allowed only in another HTTP METHOD
-         */
-        if (empty($routeWithCorrectMethod) && !empty($routeWithOtherMethod)) {
-            $this->methodNotAllowed();
-        }
-
-
-        /**
          * Check if route exists
          */
-        if (empty($routesWithCorrectMethod)) {
+        if (empty($routeWithCorrectMethod)) {
             $this->notFound();
         }
 
@@ -220,6 +212,8 @@ class Router
         }
 
         (new $className())->$function($params);
+
+
 
         die;
     }
@@ -275,4 +269,34 @@ class Router
 
         return compact('result', 'params');
     }
+
+    public function matches($routes)
+    {
+        // I used PATH_INFO instead of REQUEST_URI, because the
+        // application may not be in the root direcory
+        // and we dont want stuff like ?var=value
+        $reqUrl = $this->path;
+
+        $reqUrl = $reqUrl === "/" ?  $reqUrl : rtrim($reqUrl, "/");
+
+        /** @var Route $route */
+        foreach ($routes as $route) {
+            // convert urls like '/users/:uid/posts/:pid' to regular expression
+            // $pattern = "@^" . preg_replace('/\\\:[a-zA-Z0-9\_\-]+/', '([a-zA-Z0-9\-\_]+)', preg_quote($route['url'])) . "$@D";
+            $pattern = "@^" . preg_replace('/:[a-zA-Z0-9\_\-]+/', '([a-zA-Z0-9\-\_]+)', $route->getPath()) . "$@D";
+            // echo $pattern."\n";
+            $params = [];
+            // check if the current request params the expression
+            $match = preg_match($pattern, $reqUrl, $params);
+            if ($match) {
+                // remove the first match
+                array_shift($params);
+                // call the callback with the matched positions as params
+                // return call_user_func_array($route['callback'], $params);
+                return [$route, $params];
+            }
+        }
+        return [];
+    }
+
 }

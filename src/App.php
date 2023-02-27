@@ -128,7 +128,9 @@ class App
     public function run()
     {
         try {
+
             $this->router->dispatch();
+
         } catch (\Exception $e) {
             $class = get_class($e);
             $this->handler->render($class, $e);
