@@ -6,6 +6,8 @@ class RouterCollection
 {
     protected static \stdClass $collection;
 
+    public static array $methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+
     /**
      * Inicializa a collection de rotas caso não exista
      * @param $method

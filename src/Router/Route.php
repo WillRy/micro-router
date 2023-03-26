@@ -2,7 +2,7 @@
 
 namespace WillRy\MicroRouter\Router;
 
-use WillRy\MicroRouter\Router\MiddlewareInterface;
+use WillRy\MicroRouter\Middleware\MiddlewareInterface;
 
 class Route
 {

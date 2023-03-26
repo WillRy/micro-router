@@ -4,23 +4,35 @@ namespace WillRy\MicroRouter\Router;
 
 class ActiveRoute
 {
-    protected Route $route;
-    protected array $params = [];
+    protected static Route $route;
+    protected static array $params = [];
 
     public function __construct(Route $route, array $params = [])
     {
-        $this->route = $route;
-        $this->params = $params;
+        self::$route = $route;
+        self::$params = $params;
     }
 
-    public function getRoute(): Route
+    public static function getRoute(): Route
     {
-        return $this->route;
+        return self::$route;
     }
 
-    public function getParams(): array
+
+    public static function getParams(): array
     {
-        return $this->params;
+        return self::$params;
+    }
+
+
+    public static function setRoute(Route $route): Route
+    {
+        return self::$route = $route;
+    }
+
+    public static function setParams(array $params): array
+    {
+        return self::$params = $params;
     }
 
 }

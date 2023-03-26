@@ -4,6 +4,7 @@ namespace WillRy\MicroRouter\Controller;
 
 use WillRy\MicroRouter\App;
 use WillRy\MicroRouter\AppSingleton;
+use WillRy\MicroRouter\Router\ActiveRoute;
 
 class UserController
 {
@@ -22,8 +23,8 @@ class UserController
     public function show(array $data)
     {
         var_dump([
-            'currentRoute' => AppSingleton::getInstance()->getActiveRoute(),
-            'currentRouteParams' => AppSingleton::getInstance()->getRouteParams(),
+            'currentRoute' => ActiveRoute::getRoute(),
+            'currentRouteParams' => ActiveRoute::getParams(),
             'controllerParams' => $data
         ]);
     }

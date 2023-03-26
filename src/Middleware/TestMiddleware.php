@@ -2,7 +2,6 @@
 
 namespace WillRy\MicroRouter\Middleware;
 
-use WillRy\MicroRouter\Router\MiddlewareInterface;
 
 class TestMiddleware implements MiddlewareInterface
 {

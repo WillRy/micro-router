@@ -6,7 +6,7 @@ use WillRy\MicroRouter\Exception\MethodNotAllowedException;
 use WillRy\MicroRouter\Exception\NotFoundException;
 use WillRy\MicroRouter\Exception\RequiredRouteParamException;
 use WillRy\MicroRouter\Exception\RouteNameNotFoundException;
-use WillRy\MicroRouter\Router\MiddlewareInterface;
+use WillRy\MicroRouter\Middleware\MiddlewareInterface;
 
 class Router
 {
@@ -21,17 +21,11 @@ class Router
 
     private array $addingMiddlewaresList = [];
 
-    private ActiveRoute|null $activeRoute;
 
     public function __construct()
     {
         $this->path = $_SERVER['REQUEST_URI'] ?? '/';
         $this->method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-    }
-
-    public function getActiveRoute(): ActiveRoute
-    {
-        return $this->activeRoute;
     }
 
     public function get(string $path, string $className, string $function): Route
@@ -127,7 +121,7 @@ class Router
     }
 
 
-    public function identifyRouteByCurrentHttpMethod(): ?ActiveRoute
+    public function identifyRouteByCurrentHttpMethod(): ?array
     {
         $allRoutes = RouterCollection::filterByMethod($this->method);
 
@@ -137,25 +131,26 @@ class Router
             return null;
         }
 
-        return new ActiveRoute($result[0], $result[1]);
+        return $result;
     }
 
-    public function identifyRouteinDifferentHttpMethod(): ?ActiveRoute
+    public function identifyRouteInDifferentHttpMethod(): ?array
     {
-        $allRoutes = RouterCollection::allRoutes();
+        $differentMethods = array_filter(RouterCollection::$methods, function ($method) {
+            return $method !== $this->method;
+        });
 
-        $routes = array_values(array_filter($allRoutes, function (Route $route) {
-            return $route->getMethod() !== $this->method;
-        }));
+        foreach ($differentMethods as $method) {
+            $allRoutes = RouterCollection::filterByMethod($method);
 
+            $result = $this->matches($allRoutes);
 
-        $result = $this->matches($routes);
-
-        if (empty($result)) {
-            return null;
+            if(!empty($result)) {
+                return $result;
+            }
         }
 
-        return new ActiveRoute($result[0], $result[1]);
+        return null;
     }
 
     /**
@@ -165,15 +160,13 @@ class Router
     public function dispatch(): void
     {
 
-        $this->activeRoute = null;
-
         $routeWithCorrectMethod = $this->identifyRouteByCurrentHttpMethod();
 
         /**
          * if not exists, necessary check if should be status 404 or 405
          */
         if (empty($routeWithCorrectMethod)) {
-            $routeWithOtherMethod = $this->identifyRouteinDifferentHttpMethod();
+            $routeWithOtherMethod = $this->identifyRouteInDifferentHttpMethod();
 
             if (!empty($routeWithOtherMethod)) {
                 $this->methodNotAllowed();
@@ -189,13 +182,17 @@ class Router
             $this->notFound();
         }
 
+        /** @var Route $routeInfo */
+        $routeInfo = $routeWithCorrectMethod[0];
+        $routeParams = $routeWithCorrectMethod[1];
+
         $route = [
-            'path' => $routeWithCorrectMethod->getRoute()->getPath() ?? null,
-            'params' => $routeWithCorrectMethod->getParams() ?? [],
-            'className' => $routeWithCorrectMethod->getRoute()->getClassName() ?? null,
-            'function' => $routeWithCorrectMethod->getRoute()->getFunction() ?? null,
-            'middlewares' => $routeWithCorrectMethod->getRoute()->getMiddlewares() ?? [],
-            'method' => $routeWithCorrectMethod->getRoute()->getMethod()
+            'path' => $routeInfo->getPath() ?? null,
+            'params' => $routeParams ?? [],
+            'className' => $routeInfo->getClassName() ?? null,
+            'function' => $routeInfo->getFunction() ?? null,
+            'middlewares' => $routeInfo->getMiddlewares() ?? [],
+            'method' => $routeInfo->getMethod()
         ];
 
         $className = $route['className'];
@@ -204,7 +201,8 @@ class Router
         $middlewares = $route['middlewares'];
 
 
-        $this->activeRoute = $routeWithCorrectMethod;
+        ActiveRoute::setRoute($routeInfo);
+        ActiveRoute::setParams($routeParams);
 
         /** @var MiddlewareInterface $middleware */
         foreach ($middlewares as $middleware) {
@@ -214,13 +212,7 @@ class Router
         (new $className())->$function($params);
 
 
-
         die;
-    }
-
-    public function getParams(): array
-    {
-        return $this->activeRoute->getParams();
     }
 
     /**
@@ -277,7 +269,7 @@ class Router
         // and we dont want stuff like ?var=value
         $reqUrl = $this->path;
 
-        $reqUrl = $reqUrl === "/" ?  $reqUrl : rtrim($reqUrl, "/");
+        $reqUrl = $reqUrl === "/" ? $reqUrl : rtrim($reqUrl, "/");
 
         /** @var Route $route */
         foreach ($routes as $route) {

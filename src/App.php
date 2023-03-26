@@ -100,16 +100,6 @@ class App
         return $this->router;
     }
 
-    public function getActiveRoute(): ActiveRoute
-    {
-        return $this->router->getActiveRoute();
-    }
-
-    public function getRouteParams(): array
-    {
-        return $this->router->getParams();
-    }
-
     public function redirect(string $routeName, array $params = [], bool $permanent = true)
     {
         $url = $this->router->route($routeName, $params);
