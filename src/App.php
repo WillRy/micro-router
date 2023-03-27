@@ -54,6 +54,18 @@ class App
     }
 
     /**
+     * Registra uma rota PATCH
+     * @param string $path
+     * @param $className
+     * @param $function
+     * @return Route
+     */
+    public function patch(string $path, $className, $function): Route
+    {
+        return $this->router->patch($path, $className, $function);
+    }
+
+    /**
      * Registra uma rota DELETE
      * @param string $path
      * @param $className

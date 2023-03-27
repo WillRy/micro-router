@@ -43,6 +43,11 @@ class Router
         return $this->request('PUT', $path, $className, $function);
     }
 
+    public function patch(string $path, string $className, string $function): Route
+    {
+        return $this->request('PATCH', $path, $className, $function);
+    }
+
     public function delete(string $path, string $className, string $function): Route
     {
         return $this->request('DELETE', $path, $className, $function);

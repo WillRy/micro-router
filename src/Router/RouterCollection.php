@@ -16,7 +16,10 @@ class RouterCollection
     {
         if (empty(self::$collection)) {
             self::$collection = new \stdClass();
-            self::$collection->{$method} = [];
+        }
+        
+        if (empty(self::$collection->$method)) {
+            self::$collection->$method = [];
         }
     }
 
