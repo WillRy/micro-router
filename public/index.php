@@ -19,6 +19,7 @@ $app->get('/', UserController::class, 'index')->name('home');
 
 $app->get('/create-url', UserController::class, 'createUrl')->name('createUrl');
 
+$app->get('/param/:id', UserController::class, 'show')->name('show.user');
 
 $app->middleware([
     new TestMiddleware()

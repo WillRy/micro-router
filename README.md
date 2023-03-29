@@ -6,6 +6,16 @@ Uma biblioteca de rotas simples, que permite a declaração de rotas definindo:
 - Controller e o método responsável pela rota
 - Middlewares
 
+
+## Como executar a aplicação?
+
+- Iniciar um servidor de testes para poder acessar as rotas
+
+```shell
+#iniciar servidor do php
+php -S localhost:9090 -t public/
+```
+
 ## Exemplo de uso
 
 **public/index.php**
