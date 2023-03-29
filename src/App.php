@@ -112,12 +112,6 @@ class App
         return $this->router;
     }
 
-    public function redirect(string $routeName, array $params = [], bool $permanent = true)
-    {
-        $url = $this->router->route($routeName, $params);
-        header("Location: {$url}", true, $permanent ? 301 : 302);
-        die;
-    }
 
     public function handler(string $class, callable $callback)
     {

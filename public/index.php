@@ -6,6 +6,10 @@ use WillRy\MicroRouter\Middleware\TestMiddleware;
 
 require __DIR__ . '/../vendor/autoload.php';
 
+/**
+ * Instância do app é um singleton, retornando sempre a mesma instância
+ * e está disponível em todo o escopo da aplicação
+ */
 $app = AppSingleton::getInstance();
 
 $app->setNotFound(UserController::class, 'notFound');

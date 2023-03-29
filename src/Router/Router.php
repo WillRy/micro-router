@@ -227,7 +227,7 @@ class Router
      * @throws RequiredRouteParamException
      * @throws RouteNameNotFoundException
      */
-    public function route($name, array $params = []): string
+    public static function route($name, array $params = []): string
     {
         $route = RouterCollection::getRouteByName($name);
 
@@ -248,6 +248,13 @@ class Router
         }
 
         return $routeStr;
+    }
+
+    public static function redirect(string $routeName, array $params = [], bool $permanent = true)
+    {
+        $url = Router::route($routeName, $params);
+        header("Location: {$url}", true, $permanent ? 301 : 302);
+        die;
     }
 
     private function checkUrl(string $toFind, $subject): array

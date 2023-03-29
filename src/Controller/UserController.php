@@ -2,9 +2,8 @@
 
 namespace WillRy\MicroRouter\Controller;
 
-use WillRy\MicroRouter\App;
-use WillRy\MicroRouter\AppSingleton;
 use WillRy\MicroRouter\Router\ActiveRoute;
+use WillRy\MicroRouter\Router\Router;
 
 class UserController
 {
@@ -15,7 +14,7 @@ class UserController
 
     public function createUrl()
     {
-        $url = AppSingleton::getInstance()->getRouter()->route('show.user', ['id' => 1]);
+        $url = Router::route('show.user', ['id' => 1]);
 
         echo $url;
     }
@@ -47,6 +46,6 @@ class UserController
 
     public function redirect()
     {
-        AppSingleton::getInstance()->redirect('show.user', ['id' => 1]);
+        Router::redirect('show.user', ['id' => 1]);
     }
 }
