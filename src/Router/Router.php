@@ -220,6 +220,13 @@ class Router
         die;
     }
 
+    public static function redirect(string $routeName, array $params = [], bool $permanent = true)
+    {
+        $url = Router::route($routeName, $params);
+        header("Location: {$url}", true, $permanent ? 301 : 302);
+        die;
+    }
+
     /**
      * @param $name
      * @param array $params
@@ -235,46 +242,21 @@ class Router
 
         $routeStr = $route->getPath();
 
-        preg_match_all('/:[a-zA-Z0-9\_\-]+/', $routeStr, $matches);
-        // var_dump($matches[0]);die;
+        preg_match_all('/{([a-zA-Z]+)}/', $routeStr, $matches);
 
-        $diff = array_diff(array_values($matches[0]), array_keys($params));
+        $diff = array_diff(array_values($matches[1]), array_keys($params));
 
         if (!empty($matches[1]) && $diff) {
             throw new RequiredRouteParamException("Parameters required: " . implode(',', $diff));
         }
 
         foreach ($params as $key => $param) {
-            $routeStr = str_replace(":$key",$param, $routeStr);
+            $routeStr = str_replace("{" . $key . "}", $param, $routeStr);
         }
 
         return $routeStr;
     }
-
-    public static function redirect(string $routeName, array $params = [], bool $permanent = true)
-    {
-        $url = Router::route($routeName, $params);
-        header("Location: {$url}", true, $permanent ? 301 : 302);
-        die;
-    }
-
-    private function checkUrl(string $toFind, $subject): array
-    {
-        preg_match_all('/\{([^\}]*)\}/', $toFind, $variables);
-
-        $regex = str_replace('/', '\/', $toFind);
-
-        foreach ($variables[1] as $k => $variable) {
-            $as = explode(':', $variable);
-            $replacement = $as[1] ?? '([a-zA-Z0-9\-\_\ ]+)';
-            $regex = str_replace($variables[$k], $replacement, $regex);
-        }
-        $regex = preg_replace('/{([a-zA-Z]+)}/', '([a-zA-Z0-9+])', $regex);
-        $result = preg_match('/^' . $regex . '$/', $subject, $params);
-
-        return compact('result', 'params');
-    }
-
+    
     public function matches($routes)
     {
         // I used PATH_INFO instead of REQUEST_URI, because the
@@ -287,15 +269,17 @@ class Router
         /** @var Route $route */
         foreach ($routes as $route) {
             // convert urls like '/users/:uid/posts/:pid' to regular expression
-            // $pattern = "@^" . preg_replace('/\\\:[a-zA-Z0-9\_\-]+/', '([a-zA-Z0-9\-\_]+)', preg_quote($route['url'])) . "$@D";
-            $pattern = "@^" . preg_replace('/:[a-zA-Z0-9\_\-]+/', '([a-zA-Z0-9\-\_]+)', $route->getPath()) . "$@D";
-            // echo $pattern."\n";
+            
+            $pattern = '/^' . str_replace('/', '\/', $route->getPath()) . '$/';
+            $pattern = preg_replace('/\{(\w+)\}/', '([a-zA-Z0-9\-\_]+)', $pattern);
+            
+            
             $params = [];
             // check if the current request params the expression
             $match = preg_match($pattern, $reqUrl, $params);
             if ($match) {
                 // remove the first match
-                array_shift($params);
+                $params = array_slice($params, 1);
                 // call the callback with the matched positions as params
                 // return call_user_func_array($route['callback'], $params);
                 return [$route, $params];

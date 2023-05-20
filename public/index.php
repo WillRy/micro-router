@@ -19,13 +19,13 @@ $app->get('/', UserController::class, 'index')->name('home');
 
 $app->get('/create-url', UserController::class, 'createUrl')->name('createUrl');
 
-$app->get('/param/:id', UserController::class, 'show')->name('show.user');
-$app->get('/param/:id/teste/:id2', UserController::class, 'show')->name('test.route');
+$app->get('/param/{id}', UserController::class, 'show')->name('show.user');
+$app->get('/param/{id}/teste/{id2}', UserController::class, 'show')->name('test.route');
 
 $app->middleware([
     new TestMiddleware()
 ], function ($app) {
-    $app->get('/show/:id', UserController::class, 'show')->name('show.user');
+    $app->get('/show/{id}', UserController::class, 'show')->name('show.user');
 });
 
 $app->post('/create', UserController::class, 'create')->name('create');

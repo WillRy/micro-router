@@ -14,7 +14,7 @@ class UserController
 
     public function createUrl()
     {
-        $url = Router::route('test.route', ['id' => 1,'id2'  => 2]);
+        $url = Router::route('test.route', ['id' => 1500,'id2'  => 2]);
 
         echo $url;
     }
