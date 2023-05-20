@@ -173,11 +173,15 @@ class Router
         if (empty($routeWithCorrectMethod)) {
             $routeWithOtherMethod = $this->identifyRouteInDifferentHttpMethod();
 
-            if (!empty($routeWithOtherMethod)) {
+            if (!empty($routeWithOtherMethod) && $this->method !== "OPTIONS") {
                 $this->methodNotAllowed();
             }
 
-            $this->notFound();
+            if($this->method !== "OPTIONS") {
+                $this->notFound();
+            }
+            
+            return;
         }
 
         /**
