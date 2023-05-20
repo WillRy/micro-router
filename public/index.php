@@ -20,6 +20,7 @@ $app->get('/', UserController::class, 'index')->name('home');
 $app->get('/create-url', UserController::class, 'createUrl')->name('createUrl');
 
 $app->get('/param/:id', UserController::class, 'show')->name('show.user');
+$app->get('/param/:id/teste/:id2', UserController::class, 'show')->name('test.route');
 
 $app->middleware([
     new TestMiddleware()

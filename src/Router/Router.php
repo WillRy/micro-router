@@ -235,16 +235,17 @@ class Router
 
         $routeStr = $route->getPath();
 
-        preg_match_all('/{([a-zA-Z]+)}/', $routeStr, $matches);
+        preg_match_all('/:[a-zA-Z0-9\_\-]+/', $routeStr, $matches);
+        // var_dump($matches[0]);die;
 
-        $diff = array_diff(array_values($matches[1]), array_keys($params));
+        $diff = array_diff(array_values($matches[0]), array_keys($params));
 
         if (!empty($matches[1]) && $diff) {
             throw new RequiredRouteParamException("Parameters required: " . implode(',', $diff));
         }
 
         foreach ($params as $key => $param) {
-            $routeStr = str_replace("{" . $key . "}", $param, $routeStr);
+            $routeStr = str_replace(":$key",$param, $routeStr);
         }
 
         return $routeStr;
