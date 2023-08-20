@@ -3,6 +3,7 @@
 use WillRy\MicroRouter\AppSingleton;
 use WillRy\MicroRouter\Controller\UserController;
 use WillRy\MicroRouter\Middleware\TestMiddleware;
+use WillRy\MicroRouter\Router\RouterCollection;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -12,25 +13,29 @@ require __DIR__ . '/../vendor/autoload.php';
  */
 $app = AppSingleton::getInstance();
 
-$app->setNotFound(UserController::class, 'notFound');
-$app->setMethodNotAllowed(UserController::class, 'methodNotAllowed');
+$router = $app->router();
 
-$app->get('/', UserController::class, 'index')->name('home');
+$router->setNotFound(UserController::class, 'notFound');
+$router->setMethodNotAllowed(UserController::class, 'methodNotAllowed');
 
-$app->get('/create-url', UserController::class, 'createUrl')->name('createUrl');
+$router->get('/', UserController::class, 'index')->name('home');
 
-$app->get('/param/{id}', UserController::class, 'show')->name('show.user');
-$app->get('/param/{id}/teste/{id2}', UserController::class, 'show')->name('test.route');
+$router->get('/create-url', UserController::class, 'createUrl')->name('createUrl');
 
-$app->middleware([
-    new TestMiddleware()
-], function ($app) {
-    $app->get('/show/{id}', UserController::class, 'show')->name('show.user');
+$router->get('/param/{id}', UserController::class, 'show')->name('show.user');
+$router->get('/param/{id}/teste/{id2}', UserController::class, 'show')->name('test.route');
+
+$router->group([
+    'middlewares' => [TestMiddleware::class],
+    'prefix' => 'users'
+], function ($router) {
+    $router->get('show/{id}', UserController::class, 'show')->name('show.user');
 });
 
-$app->post('/create', UserController::class, 'create')->name('create');
+$router->post('/create', UserController::class, 'create')->name('create');
 
-$app->get('/redirect', UserController::class, 'redirect')->name('redirect');
+$router->get('/redirect', UserController::class, 'redirect')->name('redirect');
+
 
 /**
  * Para customizar os tipos de exceptions

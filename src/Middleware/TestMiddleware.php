@@ -7,10 +7,11 @@ class TestMiddleware implements MiddlewareInterface
 {
     public function handle(array $data = [])
     {
-        $rand = rand(0, 10) % 2 === 0;
-        if (!$rand) {
-            echo 'TestMiddleware - Not authenticated';
-            die;
+        $sessionStatus = session_status();
+        if($sessionStatus !== PHP_SESSION_ACTIVE && $sessionStatus !== PHP_SESSION_DISABLED) {
+            session_start();
+
+            $_SESSION['SESSION_FROM_MIDDLEWARE'] = time();
         }
 
     }

@@ -19,13 +19,14 @@ class Router
     private string $methodNotAllowedClassName;
     private string $methodNotAllowedFunctionName;
 
-    private array $addingMiddlewaresList = [];
+    private array $routeOptions = [];
 
 
     public function __construct()
     {
         $this->path = $_SERVER['REQUEST_URI'] ?? '/';
         $this->method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $this->initializaRouteOptions();
     }
 
     public function get(string $path, string $className, string $function): Route
@@ -56,7 +57,7 @@ class Router
     public function request(string $method, string $path, string $className, string $function): Route
     {
         $route = new Route();
-        $route = $route->create($method, $path, $className, $function, $this->addingMiddlewaresList);
+        $route = $route->create($method, $path, $className, $function, $this->routeOptions);
         RouterCollection::add($route);
         return $route;
     }
@@ -73,7 +74,7 @@ class Router
         $this->methodNotAllowedFunctionName = $function;
     }
 
-    public function notFound(): void
+    public function notFound()
     {
         http_response_code(404);
 
@@ -82,8 +83,7 @@ class Router
 
         if (!empty($function) && !empty($class)) {
             if (class_exists($class) && method_exists($class, $function)) {
-                (new $class())->$function();
-                die;
+                return (new $class())->$function();
             }
 
             throw new \Exception("Class [{$class}] or method [$function] doesn't exists!");
@@ -93,7 +93,7 @@ class Router
         throw new NotFoundException("404", 1);
     }
 
-    public function methodNotAllowed(): void
+    public function methodNotAllowed()
     {
         http_response_code(405);
 
@@ -102,8 +102,7 @@ class Router
 
         if (!empty($function) && !empty($class)) {
             if (class_exists($class) && method_exists($class, $function)) {
-                (new $class())->$function();
-                die;
+                return (new $class())->$function();
             }
 
             throw new \Exception("Class [{$class}] or method [$function] doesn't exists!");
@@ -113,17 +112,30 @@ class Router
         throw new MethodNotAllowedException("405", 1);
     }
 
-    public function setAddingMiddlewareList(array $middlewares): void
+
+    public function initializaRouteOptions()
     {
-        foreach ($middlewares as $middleware) {
-            $this->pushMiddlewares($middleware);
-        }
+        $this->routeOptions = [
+            'middlewares' => [],
+            'prefix' => ''
+        ];
+    }
+    /**
+     * Cria um grupo de rotas 
+     **/
+    public function group(array $routeOptions, callable $callback): void
+    {
+        $middlewares = $routeOptions['middlewares'] ?? [];
+        $prefix = $routeOptions['prefix'] ?? '';
+
+        $this->routeOptions['middlewares'] = array_merge($this->routeOptions['middlewares'], $middlewares);
+        $this->routeOptions['prefix'] = $prefix;
+
+        $callback($this);
+
+        $this->initializaRouteOptions();
     }
 
-    public function pushMiddlewares(MiddlewareInterface $middleware)
-    {
-        $this->addingMiddlewaresList[] = $middleware;
-    }
 
 
     public function identifyRouteByCurrentHttpMethod(): ?array
@@ -150,7 +162,7 @@ class Router
 
             $result = $this->matches($allRoutes);
 
-            if(!empty($result)) {
+            if (!empty($result)) {
                 return $result;
             }
         }
@@ -162,38 +174,22 @@ class Router
      * @throws NotFoundException
      * @throws MethodNotAllowedException
      */
-    public function dispatch(): void
+    public function dispatch()
     {
-
         $routeWithCorrectMethod = $this->identifyRouteByCurrentHttpMethod();
 
-        /**
-         * if not exists, necessary check if should be status 404 or 405
-         */
         if (empty($routeWithCorrectMethod)) {
             $routeWithOtherMethod = $this->identifyRouteInDifferentHttpMethod();
 
             if (!empty($routeWithOtherMethod) && $this->method !== "OPTIONS") {
-                $this->methodNotAllowed();
+                return $this->methodNotAllowed();
+            } elseif ($this->method !== "OPTIONS") {
+                return $this->notFound();
             }
-
-            if($this->method !== "OPTIONS") {
-                $this->notFound();
-            }
-            
-            return;
         }
 
-        /**
-         * Check if route exists
-         */
-        if (empty($routeWithCorrectMethod)) {
-            $this->notFound();
-        }
-
-        /** @var Route $routeInfo */
-        $routeInfo = $routeWithCorrectMethod[0];
-        $routeParams = $routeWithCorrectMethod[1];
+        // Obtenha os detalhes da rota
+        [$routeInfo, $routeParams] = $routeWithCorrectMethod;
 
         $route = [
             'path' => $routeInfo->getPath() ?? null,
@@ -204,24 +200,21 @@ class Router
             'method' => $routeInfo->getMethod()
         ];
 
-        $className = $route['className'];
-        $function = $route['function'];
-        $params = $route['params'];
-        $middlewares = $route['middlewares'];
-
-
+        // Configura a rota ativa
         ActiveRoute::setRoute($routeInfo);
         ActiveRoute::setParams($routeParams);
 
-        /** @var MiddlewareInterface $middleware */
-        foreach ($middlewares as $middleware) {
-            $middleware->handle();
+        // Execute os middlewares
+        foreach ($route['middlewares'] as $middleware) {
+            (new $middleware)->handle();
         }
 
-        (new $className())->$function($params);
+        // Execute a função da rota
+        $className = $route['className'];
+        $function = $route['function'];
+        $params = $route['params'];
 
-
-        die;
+        return (new $className())->$function($params);
     }
 
     public static function redirect(string $routeName, array $params = [], bool $permanent = true)
@@ -260,12 +253,10 @@ class Router
 
         return $routeStr;
     }
-    
+
     public function matches($routes)
     {
-        // I used PATH_INFO instead of REQUEST_URI, because the
-        // application may not be in the root direcory
-        // and we dont want stuff like ?var=value
+
         $reqUrl = $this->path;
 
         $reqUrl = $reqUrl === "/" ? $reqUrl : rtrim($reqUrl, "/");
@@ -291,5 +282,4 @@ class Router
         }
         return [];
     }
-
 }

@@ -24,7 +24,8 @@ class UserController
         var_dump([
             'currentRoute' => ActiveRoute::getRoute(),
             'currentRouteParams' => ActiveRoute::getParams(),
-            'controllerParams' => $data
+            'controllerParams' => $data,
+            'session' => $_SESSION ?? null
         ]);
     }
 
