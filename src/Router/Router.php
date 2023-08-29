@@ -6,7 +6,6 @@ use WillRy\MicroRouter\Exception\MethodNotAllowedException;
 use WillRy\MicroRouter\Exception\NotFoundException;
 use WillRy\MicroRouter\Exception\RequiredRouteParamException;
 use WillRy\MicroRouter\Exception\RouteNameNotFoundException;
-use WillRy\MicroRouter\Middleware\MiddlewareInterface;
 
 class Router
 {
@@ -181,11 +180,15 @@ class Router
         if (empty($routeWithCorrectMethod)) {
             $routeWithOtherMethod = $this->identifyRouteInDifferentHttpMethod();
 
-            if (!empty($routeWithOtherMethod) && $this->method !== "OPTIONS") {
+            if($this->method == "OPTIONS") {
+                return;
+            } 
+            
+            if (!empty($routeWithOtherMethod)) {
                 return $this->methodNotAllowed();
-            } elseif ($this->method !== "OPTIONS") {
-                return $this->notFound();
-            }
+            } 
+            
+            return $this->notFound();
         }
 
         // Obtenha os detalhes da rota
@@ -243,7 +246,7 @@ class Router
 
         $diff = array_diff(array_values($matches[1]), array_keys($params));
 
-        if (!empty($matches[1]) && $diff) {
+        if (!empty($matches[1]) && !empty($diff)) {
             throw new RequiredRouteParamException("Parameters required: " . implode(',', $diff));
         }
 

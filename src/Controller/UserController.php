@@ -2,6 +2,7 @@
 
 namespace WillRy\MicroRouter\Controller;
 
+use WillRy\MicroRouter\Exception\TestException;
 use WillRy\MicroRouter\Router\ActiveRoute;
 use WillRy\MicroRouter\Router\Router;
 
@@ -48,5 +49,10 @@ class UserController
     public function redirect()
     {
         Router::redirect('show.user', ['id' => 1]);
+    }
+
+    public function errorTest()
+    {
+        throw new TestException("Error test");
     }
 }

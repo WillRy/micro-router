@@ -2,6 +2,7 @@
 
 use WillRy\MicroRouter\AppSingleton;
 use WillRy\MicroRouter\Controller\UserController;
+use WillRy\MicroRouter\Exception\TestException;
 use WillRy\MicroRouter\Middleware\TestMiddleware;
 use WillRy\MicroRouter\Router\RouterCollection;
 
@@ -36,6 +37,8 @@ $router->post('/create', UserController::class, 'create')->name('create');
 
 $router->get('/redirect', UserController::class, 'redirect')->name('redirect');
 
+$router->get('/error-test', UserController::class, 'errorTest')->name('errorTest');
+
 
 /**
  * Para customizar os tipos de exceptions
@@ -53,6 +56,11 @@ $app->handler(\Exception::class, function (\Exception $e) {
 
     //relança a exception (opcional)
     throw $e;
+});
+
+$app->handler(TestException::class, function (TestException $e) {
+    http_response_code(422);
+    var_dump('ooops');
 });
 
 $app->run();
